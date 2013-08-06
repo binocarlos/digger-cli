@@ -1,6 +1,6 @@
 {
   "name": "digger-cli",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A command line interface to a digger reception server",
   "main": "src/index.js",
   "scripts": {
