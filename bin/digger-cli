@@ -1,0 +1,95 @@
+#!/usr/bin/env node
+/*
+
+	(The MIT License)
+
+	Copyright (C) 2005-2013 Kai Davenport
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+ */
+
+var program = require('commander');
+var http = require('http');
+
+//var request = require('request');
+//var Client = require('digger-client');
+
+function run_digger_request(warehouse, selector, done){
+  console.log('-------------------------------------------');
+  console.dir(warehouse + ' ' + selector);
+}
+
+function run_http_request(options, done){
+  
+  var req = http.request(options, function(res) {
+    res.setEncoding('utf8');
+    res.on('data', function (body) {
+      done(res, body);
+    });
+  });
+
+  req.on('error', function(e) {
+    console.log('problem with request: ' + e.message);
+  });
+
+  // write data to request body
+  req.write(options.body || '');
+  req.end();
+}
+
+function check_server(done){
+  run_http_request({
+    hostname:program.hostname,
+    port:program.port,
+    path:'/ping',
+    method:'GET'
+  }, function(res, body){
+    console.log('-------------------------------------------');
+    console.dir(res.statusCode);
+    console.dir(body);
+  })
+}
+
+function run_repl(){
+  var repl = require("repl");
+
+  var cli = repl.start("digger-cli> ");
+  cli.context.test = 10;
+}
+
+
+
+var replmode = true;
+
+program
+  .version('0.0.1')
+  .option('-p, --port <port>', 'Server port', '8791')
+  .option('-h, --hostname <hostname>', 'Server hostname', '127.0.0.1')
+  .parse(process.argv);
+
+var command = program.args.filter(function(arg){
+  return arg!=program.port && arg!=program.hostname;
+})
+
+if(command.length==0){
+  run_repl();
+}
+else{
+  var warehouse = '/';
+  if(command[0].indexOf('/')===0){
+    warehouse = command.shift();
+  }
+  var selector = command.join(' ');
+
+  check_server(function(){
+    run_digger_request(warehouse, selector, function(results){
+      console.log(JSON.stringify(results, null, 4));
+    })  
+  })
+  
+}

@@ -1,0 +1,31 @@
+{
+  "name": "digger-cli",
+  "version": "0.0.1",
+  "description": "A command line interface to a digger reception server",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "make test"
+  },
+  "bin": {
+    "digger-cli": "./bin/digger.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/binocarlos/digger-cli.git"
+  },
+  "keywords": [
+    "digger",
+    "cli"
+  ],
+  "author": "Kai Davenport",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/binocarlos/digger-cli/issues"
+  },
+  "dependencies": {
+    "celeri": "~0.3.3",
+    "rc": "~0.3.0",
+    "commander": "~2.0.0",
+    "request": "~2.25.0"
+  }
+}
