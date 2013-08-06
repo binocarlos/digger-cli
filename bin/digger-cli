@@ -17,41 +17,81 @@ var program = require('commander');
 var http = require('http');
 
 //var request = require('request');
-//var Client = require('digger-client');
+var Client = require('digger-client');
 
 function run_digger_request(warehouse, selector, done){
-  console.log('-------------------------------------------');
-  console.dir(warehouse + ' ' + selector);
+
+  var client = Client(connector);
+  var warehouse = client.connect(warehouse);
+
+  warehouse(selector).ship(function(error, results, res){
+
+  })
+}
+
+function connector(req, reply){
+  run_http_request(req, function(error, res, body){
+    console.log('-------------------------------------------');
+    console.log('-------------------------------------------');
+    console.dir(error);
+    console.dir(res.statusCode);
+    console.dir(body);
+  })
 }
 
 function run_http_request(options, done){
-  
+
+  options.hostname = program.hostname;
+  options.port = program.port;
+  options.headers = options.headers || {};
+  options.path = options.url;
+
+  for(var prop in options.headers){
+    var val = options.headers[prop];
+    if(typeof(val)!=='string'){
+      options.headers[prop] = JSON.stringify(val);
+    }
+  }
+
+  var body = null;
+  if(options.body && typeof(options.body)!=='string'){
+    body = JSON.stringify(options.body);
+  }
+  delete(options.body);
+  if(body){
+    options.headers['content-type'] = 'application/json';
+    options.headers['content-length'] = body.length;  
+  }
+
   var req = http.request(options, function(res) {
     res.setEncoding('utf8');
     res.on('data', function (body) {
-      done(res, body);
+      done(null, res, body);
     });
   });
 
   req.on('error', function(e) {
-    console.log('problem with request: ' + e.message);
+    done(e);
   });
 
   // write data to request body
-  req.write(options.body || '');
+  if(body){
+    req.write(body);
+  }
   req.end();
 }
 
 function check_server(done){
   run_http_request({
-    hostname:program.hostname,
-    port:program.port,
-    path:'/ping',
+    url:'/ping',
     method:'GET'
-  }, function(res, body){
-    console.log('-------------------------------------------');
-    console.dir(res.statusCode);
-    console.dir(body);
+  }, function(error, res, body){
+    if(error || body!=='pong'){
+      console.error('could not connect to HTTP server: ' + program.hostname + ':' + program.port);
+      console.error(error);
+      process.exit();
+    }
+    done();
   })
 }
 
@@ -61,8 +101,6 @@ function run_repl(){
   var cli = repl.start("digger-cli> ");
   cli.context.test = 10;
 }
-
-
 
 var replmode = true;
 
